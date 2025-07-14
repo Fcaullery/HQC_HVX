@@ -5,7 +5,7 @@
 ########################################################################
 
 PROGRAM = keccak
-Q6VERSION = v75
+Q6VERSION = v79
 
 
 OBJ_DIR = ./build
@@ -49,7 +49,8 @@ endif
 #  Usage "make SRC=I" if use C intrinsics                 #
 #---------------------------------------------------------#
 ifeq ($(SRC),I)
-  _C_SRCS = $(PROGRAM)_i.c \
+  _C_SRCS = polynomial_mul_i.c \
+  			$(PROGRAM)_i.c \
             test_$(PROGRAM).c
   _ASM_SRCS =
 else
