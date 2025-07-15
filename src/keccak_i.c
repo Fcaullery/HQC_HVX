@@ -509,26 +509,27 @@ void keccak_24(unsigned long long *state){
     	lane4 = Q6_V_lo_W(helper);
     	lane1 = Q6_V_hi_W(helper);
 		helper = Q6_W_vswap_QVV(Q, lane2, lane3);
-    	lane2 = Q6_V_lo_W(helper);
-    	lane3 = Q6_V_hi_W(helper);
-        helper = Q6_W_vswap_QVV(Q2^Q3, lane1, lane3);
     	lane3 = Q6_V_lo_W(helper);
-    	lane1 = Q6_V_hi_W(helper);
-        helper = Q6_W_vswap_QVV(Q4^Q3, lane1, lane2);
+    	lane2 = Q6_V_hi_W(helper);
+        helper = Q6_W_vswap_QVV(Q2^Q3, lane1, lane2);
     	lane2 = Q6_V_lo_W(helper);
     	lane1 = Q6_V_hi_W(helper);
-        helper = Q6_W_vswap_QVV(Q2^Q1, lane2, lane4);
+        helper = Q6_W_vswap_QVV(Q^Q1, lane2, lane4);
     	lane4 = Q6_V_lo_W(helper);
     	lane2 = Q6_V_hi_W(helper);
-        helper = Q6_W_vswap_QVV(Q^Q1, lane3, lane4);
+        helper = Q6_W_vswap_QVV(Q4^Q3, lane1, lane3);
+    	lane3 = Q6_V_lo_W(helper);
+    	lane1 = Q6_V_hi_W(helper);
+        helper = Q6_W_vswap_QVV(Q1^Q2, lane3, lane4);
     	lane4 = Q6_V_lo_W(helper);
     	lane3 = Q6_V_hi_W(helper);
 
+
 		lane1 = Q6_V_vdelta_VV(lane1, shift);
-		lane2 = Q6_V_vrdelta_VV(lane2, shift);
-		lane2 = Q6_V_vrdelta_VV(lane2, shift);
-		lane3 = Q6_V_vdelta_VV(lane3, shift);
-		lane3 = Q6_V_vdelta_VV(lane3, shift);
+		lane2 = Q6_V_vdelta_VV(lane2, shift);
+		lane2 = Q6_V_vdelta_VV(lane2, shift);
+		lane3 = Q6_V_vrdelta_VV(lane3, shift);
+		lane3 = Q6_V_vrdelta_VV(lane3, shift);
 		lane4 = Q6_V_vrdelta_VV(lane4, shift);
 
 
