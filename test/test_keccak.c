@@ -77,7 +77,7 @@ static void print_state(const char *label, lane_t A[5][5]) {
 
         for(int x = 0; x < 5; x++)
 
-            printf("%016llu", A[x][y]);
+            printf("%016llx", A[x][y]);
 
         putchar('\n');
 
@@ -280,14 +280,56 @@ int main(int argc, char* argv[])
         if(i % 16 == 15) printf("\n");
     }
 
-    printf("\n\n");
+    uint64_t C0, C1, C2, C3, C4;
+    uint64_t D0, D1, D2, D3, D4;
+    C0 = test[0] ^ test[5 + 11] ^ test[10 + 22] ^ test[15 + 33] ^ test[20 + 44];
+    C1 = test[1] ^ test[6 + 11] ^ test[11 + 22] ^ test[16 + 33] ^ test[21 + 44];
+    C2 = test[2] ^ test[7 + 11] ^ test[12 + 22] ^ test[17 + 33] ^ test[22 + 44];
+    C3 = test[3] ^ test[8 + 11] ^ test[13 + 22] ^ test[18 + 33] ^ test[23 + 44];
+    C4 = test[4] ^ test[9 + 11] ^ test[14 + 22] ^ test[19 + 33] ^ test[24 + 44];
+    D0 = C4 ^ ((C1 << 1) ^ (C1 >> 63));
+    D1 = C0 ^ ((C2 << 1) ^ (C2 >> 63));
+    D2 = C1 ^ ((C3 << 1) ^ (C3 >> 63));
+    D3 = C2 ^ ((C4 << 1) ^ (C4 >> 63));
+    D4 = C3 ^ ((C0 << 1) ^ (C0 >> 63));
+
+    test[0] ^= D0; test[5 + 11] ^= D0; test[10 + 22] ^= D0; test[15 + 33] ^= D0; test[20 + 44] ^= D0;
+	test[1] ^= D1; test[6 + 11] ^= D1; test[11 + 22] ^= D1; test[16 + 33] ^= D1; test[21 + 44] ^= D1;
+	test[2] ^= D2; test[7 + 11] ^= D2; test[12 + 22] ^= D2; test[17 + 33] ^= D2; test[22 + 44] ^= D2;
+	test[3] ^= D3; test[8 + 11] ^= D3; test[13 + 22] ^= D3; test[18 + 33] ^= D3; test[23 + 44] ^= D3;
+	test[4] ^= D4; test[9 + 11] ^= D4; test[14 + 22] ^= D4; test[19 + 33] ^= D4; test[24 + 44] ^= D4;
+
+    test[1] = (test[1] << 1) ^ (test[1] >> 63);
+    test[2] = (test[2] << 62) ^ (test[2] >> 2);
+    test[3] = (test[3] << 28) ^ (test[3] >> 36);
+    test[4] = (test[4] << 27) ^ (test[4] >> 37);
+
+//    test[5 + 11] = (test[5 + 11] << 1) ^ (test[5 + 11] >> 63);
+//    test[6 + 11] = (test[1 + 16] << 1) ^ (test[1 + 16] >> 63);
+//    test[2 + 16] = (test[2 + 16] << 62) ^ (test[2 + 16] >> 2);
+//    test[3 + 16] = (test[3 + 16] << 28) ^ (test[3 + 16] >> 36);
+//    test[4 + 16] = (test[4 + 16] << 27) ^ (test[4 + 16] >> 37);
+
+    printf("\n");
+
+    for (i = 0; i < 16*5; i++) {
+        printf("%02llx ", test[i]);
+        if(i % 16 == 15) printf("\n");
+    }
+    offset = 0;
+    for (i = 0; i < 25; i++) {
+		test[i + offset] = i + 1;
+        if(i % 5 == 4) offset+=11;
+    }
+
     RESET_PMU();
     start_time = READ_PCYCLES();
     keccak_24(test);
     total_cycles = READ_PCYCLES() - start_time;
+    printf("\n");
 
     for (i = 0; i < 16*5; i++) {
-        printf("%02lld ", test[i]);
+        printf("%02llx ", test[i]);
         if(i % 16 == 15) printf("\n");
     }
 
@@ -303,7 +345,7 @@ int main(int argc, char* argv[])
     //     }
     // }
     //
-    // sline000[2] = 0x3llu<<62;
+    // sline000[2] = 0x3llx<<62;
     // for (i = 0; i < 16*5; i++) {
     //     printf("%08llx ", sline000[i]);
     //     if (i % 16 == 15) {
@@ -328,7 +370,7 @@ int main(int argc, char* argv[])
 
     DUMP_PMU();
 
-    printf("AppReported (HVX%db-mode): - keccak: %llu cycles\n", VLEN, total_cycles);
+    printf("AppReported (HVX%db-mode): - keccak: %llx cycles\n", VLEN, total_cycles);
 
 
     return 0;

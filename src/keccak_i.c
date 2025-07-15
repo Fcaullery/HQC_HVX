@@ -193,13 +193,13 @@ static const unsigned char rotation_crtl[256] __attribute__((aligned(128))) = {
 };
 
 static const unsigned int rots[64 * 5] __attribute__((aligned(128))) = {
-    3,3,10,10,31,31,25,25,
-    31,31,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
+    00,00,01,01,31,31,28,28,
+    27,27,00,00,00,00,00,00,
+    00,00,00,00,00,00,00,00,
+    00,00,00,00,00,00,00,00,
 
-    0,0,0,0,12,12,0,0,
-    8,8,0,0,0,0,0,0,
+    00,00,00,00,31,31,00,00,
+    0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,
 
@@ -213,16 +213,6 @@ static const unsigned int rots[64 * 5] __attribute__((aligned(128))) = {
     0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,
 
-    0,0,1,1,31,31,28,28,
-    27,27,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-
-    0,0,0,0,0,0,31,31,
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,
-
     18,18,2,2,31,31,31,31,
     14,14,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,
@@ -230,6 +220,16 @@ static const unsigned int rots[64 * 5] __attribute__((aligned(128))) = {
 
     0,0,0,0,30,30,25,25,
     0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+
+    3,3,10,10,31,31,25,25,
+    31,31,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+
+    0,0,0,0,12,12,0,0,
+    8,8,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,
 
@@ -327,111 +327,112 @@ void keccak_24(unsigned long long *state){
     HVX_Vector lane2 = *plane2;
     HVX_Vector lane3 = *plane3;
     HVX_Vector lane4 = *plane4;
+	HVX_Vector *control_p = (HVX_Vector *)(rotation_crtl);
+    HVX_Vector shift = *control_p;
+    HVX_Vector ctrl;
+	HVX_Vector *shifts = (HVX_Vector *)(rots);
+
 
 //    for(int i = 0; i < 24; i++){
     // Theta
-//        HVX_Vector C = lane0 ^ lane1 ^ lane2 ^ lane3 ^ lane4;
-//        HVX_Vector *control_p = (HVX_Vector *)(rotation_crtl);
-//        HVX_Vector ctrl = *control_p++;
-//        //Rotate C left by 1 (C[x+1])
-//        HVX_Vector D = Q6_V_vdelta_VV(C, ctrl);
-//
-//        ctrl = *control_p;
-//        //Rotate C right by 1 (C[x-1])
-//        C = Q6_V_vrdelta_VV(C, ctrl);
-//
-//        // rot(C[x], 1)
-//        HVX_Vector tmp = Q6_Vw_vasl_VwR(C, 1);
-//        HVX_Vector tmp1 = Q6_Vuw_vlsr_VuwR(C, 31);
-//        ctrl = Q6_V_vsplat_R(4);
-//        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
-//        C = tmp ^ tmp1;
-//        D ^= C;
-//
-//        lane0 ^= D;
-//        lane1 ^= D;
-//        lane2 ^= D;
-//        lane3 ^= D;
-//        lane4 ^= D;
-//
-//
-//        //rot by vector
-//
-//        HVX_Vector *shifts = (HVX_Vector *)(rots);
-//        HVX_Vector shifts_opp = Q6_V_vsplat_R(32) - *shifts;
-//        tmp = Q6_Vw_vasl_VwVw(lane0, *shifts);
-//        tmp1 = Q6_Vw_vlsr_VwVw(lane0, shifts_opp);
-//        ctrl = Q6_V_vsplat_R(4);
-//        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
-//        lane0 = tmp ^ tmp1;
-//        shifts++;
-//        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
-//        tmp = Q6_Vw_vasl_VwVw(lane0, *shifts);
-//        tmp1 = Q6_Vw_vlsr_VwVw(lane0, shifts_opp);
-//        ctrl = Q6_V_vsplat_R(4);
-//        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
-//        lane0 = tmp ^ tmp1;
-//
-//        shifts++;
-//        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
-//        tmp = Q6_Vw_vasl_VwVw(lane1, *shifts);
-//        tmp1 = Q6_Vw_vlsr_VwVw(lane1, shifts_opp);
-//        ctrl = Q6_V_vsplat_R(4);
-//        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
-//        lane1 = tmp ^ tmp1;
-//        shifts++;
-//        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
-//        tmp = Q6_Vw_vasl_VwVw(lane1, *shifts);
-//        tmp1 = Q6_Vw_vlsr_VwVw(lane1, shifts_opp);
-//        ctrl = Q6_V_vsplat_R(4);
-//        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
-//        lane1 = tmp ^ tmp1;
-//
-//        shifts++;
-//        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
-//        tmp = Q6_Vw_vasl_VwVw(lane2, *shifts);
-//        tmp1 = Q6_Vw_vlsr_VwVw(lane2, shifts_opp);
-//        ctrl = Q6_V_vsplat_R(4);
-//        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
-//        lane2 = tmp ^ tmp1;
-//        shifts++;
-//        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
-//        tmp = Q6_Vw_vasl_VwVw(lane2, *shifts);
-//        tmp1 = Q6_Vw_vlsr_VwVw(lane2, shifts_opp);
-//        ctrl = Q6_V_vsplat_R(4);
-//        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
-//        lane2 = tmp ^ tmp1;
-//
-//        shifts++;
-//        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
-//        tmp = Q6_Vw_vasl_VwVw(lane3, *shifts);
-//        tmp1 = Q6_Vw_vlsr_VwVw(lane3, shifts_opp);
-//        ctrl = Q6_V_vsplat_R(4);
-//        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
-//        lane3 = tmp ^ tmp1;
-//        shifts++;
-//        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
-//        tmp = Q6_Vw_vasl_VwVw(lane3, *shifts);
-//        tmp1 = Q6_Vw_vlsr_VwVw(lane3, shifts_opp);
-//        ctrl = Q6_V_vsplat_R(4);
-//        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
-//        lane3 = tmp ^ tmp1;
-//
-//        shifts++;
-//        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
-//        tmp = Q6_Vw_vasl_VwVw(lane4, *shifts);
-//        tmp1 = Q6_Vw_vlsr_VwVw(lane4, shifts_opp);
-//        ctrl = Q6_V_vsplat_R(4);
-//        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
-//        lane4 = tmp ^ tmp1;
-//
-//        shifts++;
-//        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
-//        tmp = Q6_Vw_vasl_VwVw(lane4, *shifts);
-//        tmp1 = Q6_Vw_vlsr_VwVw(lane4, shifts_opp);
-//        ctrl = Q6_V_vsplat_R(4);
-//        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
-//        lane4 = tmp ^ tmp1;
+        HVX_Vector C = lane0 ^ lane1 ^ lane2 ^ lane3 ^ lane4;
+
+        //Rotate C left by 1 (C[x+1])
+        HVX_Vector D = Q6_V_vdelta_VV(C, shift);
+
+        //Rotate C right by 1 (C[x-1])
+        C = Q6_V_vrdelta_VV(C, shift);
+
+        // rot(C[x+1] (=D for now), 1)
+        HVX_Vector tmp = Q6_Vw_vasl_VwR(D, 1);
+        HVX_Vector tmp1 = Q6_Vuw_vlsr_VuwR(D, 31);
+        shift = Q6_V_vsplat_R(4);
+        tmp1 = Q6_V_vdelta_VV(tmp1, shift);
+        D = tmp ^ tmp1;
+        D ^= C;
+
+        lane0 ^= D;
+        lane1 ^= D;
+        lane2 ^= D;
+        lane3 ^= D;
+        lane4 ^= D;
+
+        //rot by vector
+
+        HVX_Vector shifts_opp = Q6_V_vsplat_R(32) - *shifts;
+        tmp = Q6_Vw_vasl_VwVw(lane0, *shifts);
+        tmp1 = Q6_Vw_vlsr_VwVw(lane0, shifts_opp);
+        ctrl = Q6_Vb_vsplat_R(4);
+        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
+        lane0 = tmp1 ^ tmp;
+        shifts++;
+        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
+        tmp = Q6_Vw_vasl_VwVw(lane0, *shifts);
+        tmp1 = Q6_Vw_vlsr_VwVw(lane0, shifts_opp);
+        ctrl = Q6_Vb_vsplat_R(4);
+        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
+        lane0 = tmp ^ tmp1;
+
+        shifts++;
+        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
+        tmp = Q6_Vw_vasl_VwVw(lane1, *shifts);
+        tmp1 = Q6_Vw_vlsr_VwVw(lane1, shifts_opp);
+        ctrl = Q6_Vb_vsplat_R(4);
+        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
+        lane1 = tmp ^ tmp1;
+        shifts++;
+        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
+        tmp = Q6_Vw_vasl_VwVw(lane1, *shifts);
+        tmp1 = Q6_Vw_vlsr_VwVw(lane1, shifts_opp);
+        ctrl = Q6_Vb_vsplat_R(4);
+        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
+        lane1 = tmp ^ tmp1;
+
+        shifts++;
+        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
+        tmp = Q6_Vw_vasl_VwVw(lane2, *shifts);
+        tmp1 = Q6_Vw_vlsr_VwVw(lane2, shifts_opp);
+        ctrl = Q6_Vb_vsplat_R(4);
+        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
+        lane2 = tmp ^ tmp1;
+        shifts++;
+        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
+        tmp = Q6_Vw_vasl_VwVw(lane2, *shifts);
+        tmp1 = Q6_Vw_vlsr_VwVw(lane2, shifts_opp);
+        ctrl = Q6_Vb_vsplat_R(4);
+        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
+        lane2 = tmp ^ tmp1;
+
+        shifts++;
+        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
+        tmp = Q6_Vw_vasl_VwVw(lane3, *shifts);
+        tmp1 = Q6_Vw_vlsr_VwVw(lane3, shifts_opp);
+        ctrl = Q6_Vb_vsplat_R(4);
+        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
+        lane3 = tmp ^ tmp1;
+        shifts++;
+        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
+        tmp = Q6_Vw_vasl_VwVw(lane3, *shifts);
+        tmp1 = Q6_Vw_vlsr_VwVw(lane3, shifts_opp);
+        ctrl = Q6_Vb_vsplat_R(4);
+        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
+        lane3 = tmp ^ tmp1;
+
+        shifts++;
+        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
+        tmp = Q6_Vw_vasl_VwVw(lane4, *shifts);
+        tmp1 = Q6_Vw_vlsr_VwVw(lane4, shifts_opp);
+        ctrl = Q6_Vb_vsplat_R(4);
+        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
+        lane4 = tmp ^ tmp1;
+
+        shifts++;
+        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
+        tmp = Q6_Vw_vasl_VwVw(lane4, *shifts);
+        tmp1 = Q6_Vw_vlsr_VwVw(lane4, shifts_opp);
+        ctrl = Q6_Vb_vsplat_R(4);
+        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
+        lane4 = tmp ^ tmp1;
 
 
 
@@ -474,70 +475,63 @@ void keccak_24(unsigned long long *state){
 //        lane4 = tmp4;
 
         //Transpose
-		HVX_Vector tmp, *control = ((HVX_Vector *) rotation_crtl);
-		HVX_Vector shift = *control;
-
-        lane1 = Q6_V_vrdelta_VV(lane1, shift);
-        lane2 = Q6_V_vrdelta_VV(lane2, shift);
-        lane2 = Q6_V_vrdelta_VV(lane2, shift);
-        lane3 = Q6_V_vdelta_VV(lane3, shift);
-        lane3 = Q6_V_vdelta_VV(lane3, shift);
-        lane4 = Q6_V_vdelta_VV(lane4, shift);
-
-        HVX_VectorPred Q = Q6_Q_vsetq_R(8);
-        HVX_VectorPred Q1 = Q6_Q_vsetq_R(16);
-        HVX_VectorPred Q2 = Q6_Q_vsetq_R(24);
-        HVX_VectorPred Q3 = Q6_Q_vsetq_R(32);
-        HVX_VectorPred Q4 = Q6_Q_vsetq_R(40);
-        HVX_VectorPred swap = Q ^ Q1;
-	    HVX_VectorPair helper = Q6_W_vswap_QVV(swap, lane0, lane1);
-    	lane1 = Q6_V_lo_W(helper);
-    	lane0 = Q6_V_hi_W(helper);
-        swap = Q1 ^ Q2;
-	    helper = Q6_W_vswap_QVV(swap, lane0, lane2);
-    	lane2 = Q6_V_lo_W(helper);
-    	lane0 = Q6_V_hi_W(helper);
-        swap = Q3 ^ Q2;
-	    helper = Q6_W_vswap_QVV(swap, lane0, lane3);
-    	lane3 = Q6_V_lo_W(helper);
-    	lane0 = Q6_V_hi_W(helper);
-        swap = Q3 ^ Q4;
-	    helper = Q6_W_vswap_QVV(swap, lane0, lane4);
-    	lane4 = Q6_V_lo_W(helper);
-    	lane0 = Q6_V_hi_W(helper);
-		helper = Q6_W_vswap_QVV(Q, lane1, lane4);
-    	lane4 = Q6_V_lo_W(helper);
-    	lane1 = Q6_V_hi_W(helper);
-		helper = Q6_W_vswap_QVV(Q, lane2, lane3);
-    	lane3 = Q6_V_lo_W(helper);
-    	lane2 = Q6_V_hi_W(helper);
-        helper = Q6_W_vswap_QVV(Q2^Q3, lane1, lane2);
-    	lane2 = Q6_V_lo_W(helper);
-    	lane1 = Q6_V_hi_W(helper);
-        helper = Q6_W_vswap_QVV(Q^Q1, lane2, lane4);
-    	lane4 = Q6_V_lo_W(helper);
-    	lane2 = Q6_V_hi_W(helper);
-        helper = Q6_W_vswap_QVV(Q4^Q3, lane1, lane3);
-    	lane3 = Q6_V_lo_W(helper);
-    	lane1 = Q6_V_hi_W(helper);
-        helper = Q6_W_vswap_QVV(Q1^Q2, lane3, lane4);
-    	lane4 = Q6_V_lo_W(helper);
-    	lane3 = Q6_V_hi_W(helper);
-
-
-		lane1 = Q6_V_vdelta_VV(lane1, shift);
-		lane2 = Q6_V_vdelta_VV(lane2, shift);
-		lane2 = Q6_V_vdelta_VV(lane2, shift);
-		lane3 = Q6_V_vrdelta_VV(lane3, shift);
-		lane3 = Q6_V_vrdelta_VV(lane3, shift);
-		lane4 = Q6_V_vrdelta_VV(lane4, shift);
-
-
+//		HVX_Vector tmp, *control = ((HVX_Vector *) rotation_crtl);
+//		HVX_Vector shift = *control;
 //
 //        lane1 = Q6_V_vrdelta_VV(lane1, shift);
 //        lane2 = Q6_V_vrdelta_VV(lane2, shift);
-//        lane3 = Q6_V_vrdelta_VV(lane3, shift);
-//        lane4 = Q6_V_vrdelta_VV(lane4, shift);
+//        lane2 = Q6_V_vrdelta_VV(lane2, shift);
+//        lane3 = Q6_V_vdelta_VV(lane3, shift);
+//        lane3 = Q6_V_vdelta_VV(lane3, shift);
+//        lane4 = Q6_V_vdelta_VV(lane4, shift);
+//
+//        HVX_VectorPred Q = Q6_Q_vsetq_R(8);
+//        HVX_VectorPred Q1 = Q6_Q_vsetq_R(16);
+//        HVX_VectorPred Q2 = Q6_Q_vsetq_R(24);
+//        HVX_VectorPred Q3 = Q6_Q_vsetq_R(32);
+//        HVX_VectorPred Q4 = Q6_Q_vsetq_R(40);
+//        HVX_VectorPred swap = Q ^ Q1;
+//	    HVX_VectorPair helper = Q6_W_vswap_QVV(swap, lane0, lane1);
+//    	lane1 = Q6_V_lo_W(helper);
+//    	lane0 = Q6_V_hi_W(helper);
+//        swap = Q1 ^ Q2;
+//	    helper = Q6_W_vswap_QVV(swap, lane0, lane2);
+//    	lane2 = Q6_V_lo_W(helper);
+//    	lane0 = Q6_V_hi_W(helper);
+//        swap = Q3 ^ Q2;
+//	    helper = Q6_W_vswap_QVV(swap, lane0, lane3);
+//    	lane3 = Q6_V_lo_W(helper);
+//    	lane0 = Q6_V_hi_W(helper);
+//        swap = Q3 ^ Q4;
+//	    helper = Q6_W_vswap_QVV(swap, lane0, lane4);
+//    	lane4 = Q6_V_lo_W(helper);
+//    	lane0 = Q6_V_hi_W(helper);
+//		helper = Q6_W_vswap_QVV(Q, lane1, lane4);
+//    	lane4 = Q6_V_lo_W(helper);
+//    	lane1 = Q6_V_hi_W(helper);
+//		helper = Q6_W_vswap_QVV(Q, lane2, lane3);
+//    	lane3 = Q6_V_lo_W(helper);
+//    	lane2 = Q6_V_hi_W(helper);
+//        helper = Q6_W_vswap_QVV(Q2^Q3, lane1, lane2);
+//    	lane2 = Q6_V_lo_W(helper);
+//    	lane1 = Q6_V_hi_W(helper);
+//        helper = Q6_W_vswap_QVV(Q^Q1, lane2, lane4);
+//    	lane4 = Q6_V_lo_W(helper);
+//    	lane2 = Q6_V_hi_W(helper);
+//        helper = Q6_W_vswap_QVV(Q4^Q3, lane1, lane3);
+//    	lane3 = Q6_V_lo_W(helper);
+//    	lane1 = Q6_V_hi_W(helper);
+//        helper = Q6_W_vswap_QVV(Q1^Q2, lane3, lane4);
+//    	lane4 = Q6_V_lo_W(helper);
+//    	lane3 = Q6_V_hi_W(helper);
+//
+//
+//		lane1 = Q6_V_vdelta_VV(lane1, shift);
+//		lane2 = Q6_V_vdelta_VV(lane2, shift);
+//		lane2 = Q6_V_vdelta_VV(lane2, shift);
+//		lane3 = Q6_V_vrdelta_VV(lane3, shift);
+//		lane3 = Q6_V_vrdelta_VV(lane3, shift);
+//		lane4 = Q6_V_vrdelta_VV(lane4, shift);
 
 
 //        control_p = (HVX_Vector *)(rc + 16 * i);
