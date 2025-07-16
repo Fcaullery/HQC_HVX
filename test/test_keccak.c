@@ -354,10 +354,11 @@ int main(int argc, char* argv[])
     printf("\n");
 
     for (i = 0; i < 16*5; i++) {
-        printf("%02llx ", test[i]);
+      	if(test[i]){
+        	printf("%016llx ", test[i]);
+    	}
         if(i % 16 == 15) printf("\n");
-    }
-
+	}
     // printf("\n\n");
     //
     // unsigned long long sline000[16*5] __attribute__((aligned(128))) = {0};
