@@ -262,7 +262,32 @@ int main(int argc, char* argv[])
 //    printf("\n");
 //
 
+    uint64_t pos[25] = {0};
 
+    for(int x=0; x<5; x++){
+      for(int y=0; y<5; y++){
+        pos[x + 5*y] = x + 5*y;
+      }
+    }
+
+	for(int x=0; x<25; x++){
+          printf("%02llu ", pos[x]);
+          if(x%5 == 4) printf("\n");
+	}
+	putchar('\n');
+
+    uint64_t pos_b[25] = {0};
+	for(int x=0; x<5; x++){
+          for(int y=0; y<5; y++){
+            pos_b[((2 * x + 3 *y) % 5) + 5*y] = pos[x + 5*y];
+          }
+	}
+
+	for(int x=0; x<25; x++){
+          printf("%02llu ", pos_b[x]);
+          if(x%5 == 4) printf("\n");
+	}
+	putchar('\n');
 
     unsigned long long test[16*5] __attribute__((aligned(128))) = {0};
 //    for (i = 0; i < 16*5; i++) {
@@ -318,7 +343,7 @@ int main(int argc, char* argv[])
     }
     offset = 0;
     for (i = 0; i < 25; i++) {
-		test[i + offset] = i + 1;
+		test[i + offset] = i;
         if(i % 5 == 4) offset+=11;
     }
 

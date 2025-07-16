@@ -246,10 +246,11 @@ static const unsigned int rots[64 * 5] __attribute__((aligned(128))) = {
 
 
 static const unsigned char pi_ctrl[256] __attribute__((aligned(128))) = {
-    0b0111000, 0b0111000, 0b0111000, 0b0111000, 0b0111000, 0b0111000, 0b0111000, 0b0111000,
-    0b11000, 0b11000, 0b11000, 0b11000, 0b11000, 0b11000, 0b11000, 0b11000,
+
+    0b110000, 0b110000, 0b110000, 0b110000, 0b110000, 0b110000, 0b110000, 0b110000,
+    0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0,
     0b010000, 0b010000, 0b010000, 0b010000, 0b010000, 0b010000, 0b010000, 0b010000,
-    0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000,
+    0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0,
     0b100000, 0b100000, 0b100000, 0b100000, 0b100000, 0b100000, 0b100000, 0b100000,
     0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
     0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
@@ -263,10 +264,12 @@ static const unsigned char pi_ctrl[256] __attribute__((aligned(128))) = {
     0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
     0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
 
-    0b0100000, 0b0100000, 0b0100000, 0b0100000, 0b0100000, 0b0100000, 0b0100000, 0b0100000,
-    0b0,0b00,0b0, 0b0,0b00,0b0, 0b0,0b00,0b0, 0b0,0b00,0b0, 0b0,0b00,0b0, 0b0,0b00,0b0, 0b0,0b00,0b0, 0b0,0b00,0b0,
-    0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
-    0x00,0x00,0x0,
+
+    0b11000, 0b11000, 0b11000, 0b11000, 0b11000, 0b11000, 0b11000, 0b11000,
+    0b11000, 0b11000, 0b11000, 0b11000, 0b11000, 0b11000, 0b11000, 0b11000,
+    0b010000, 0b010000, 0b010000, 0b010000, 0b010000, 0b010000, 0b010000, 0b010000,
+    0b010000, 0b010000, 0b010000, 0b010000, 0b010000, 0b010000, 0b010000, 0b010000,
+    0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0,
     0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
     0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
     0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
@@ -277,7 +280,9 @@ static const unsigned char pi_ctrl[256] __attribute__((aligned(128))) = {
     0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
     0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
     0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
-    0x00,0x00,0x00,0x00, 0x00
+    0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00
+
+
 };
 
 static const unsigned long long rc[24*16] __attribute__((aligned(128))) = {
@@ -335,129 +340,124 @@ void keccak_24(unsigned long long *state){
 
 //    for(int i = 0; i < 24; i++){
     // Theta
-        HVX_Vector C = lane0 ^ lane1 ^ lane2 ^ lane3 ^ lane4;
-
-        //Rotate C left by 1 (C[x+1])
-        HVX_Vector D = Q6_V_vdelta_VV(C, shift);
-
-        //Rotate C right by 1 (C[x-1])
-        C = Q6_V_vrdelta_VV(C, shift);
-
-        // rot(C[x+1] (=D for now), 1)
-        HVX_Vector tmp = Q6_Vw_vasl_VwR(D, 1);
-        HVX_Vector tmp1 = Q6_Vuw_vlsr_VuwR(D, 31);
-        shift = Q6_V_vsplat_R(4);
-        tmp1 = Q6_V_vdelta_VV(tmp1, shift);
-        D = tmp ^ tmp1;
-        D ^= C;
-
-        lane0 ^= D;
-        lane1 ^= D;
-        lane2 ^= D;
-        lane3 ^= D;
-        lane4 ^= D;
-
-        //rot by vector
-
-        HVX_Vector shifts_opp = Q6_V_vsplat_R(32) - *shifts;
-        tmp = Q6_Vw_vasl_VwVw(lane0, *shifts);
-        tmp1 = Q6_Vw_vlsr_VwVw(lane0, shifts_opp);
-        ctrl = Q6_Vb_vsplat_R(4);
-        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
-        lane0 = tmp1 ^ tmp;
-        shifts++;
-        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
-        tmp = Q6_Vw_vasl_VwVw(lane0, *shifts);
-        tmp1 = Q6_Vw_vlsr_VwVw(lane0, shifts_opp);
-        ctrl = Q6_Vb_vsplat_R(4);
-        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
-        lane0 = tmp ^ tmp1;
-
-        shifts++;
-        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
-        tmp = Q6_Vw_vasl_VwVw(lane1, *shifts);
-        tmp1 = Q6_Vw_vlsr_VwVw(lane1, shifts_opp);
-        ctrl = Q6_Vb_vsplat_R(4);
-        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
-        lane1 = tmp ^ tmp1;
-        shifts++;
-        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
-        tmp = Q6_Vw_vasl_VwVw(lane1, *shifts);
-        tmp1 = Q6_Vw_vlsr_VwVw(lane1, shifts_opp);
-        ctrl = Q6_Vb_vsplat_R(4);
-        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
-        lane1 = tmp ^ tmp1;
-
-        shifts++;
-        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
-        tmp = Q6_Vw_vasl_VwVw(lane2, *shifts);
-        tmp1 = Q6_Vw_vlsr_VwVw(lane2, shifts_opp);
-        ctrl = Q6_Vb_vsplat_R(4);
-        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
-        lane2 = tmp ^ tmp1;
-        shifts++;
-        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
-        tmp = Q6_Vw_vasl_VwVw(lane2, *shifts);
-        tmp1 = Q6_Vw_vlsr_VwVw(lane2, shifts_opp);
-        ctrl = Q6_Vb_vsplat_R(4);
-        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
-        lane2 = tmp ^ tmp1;
-
-        shifts++;
-        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
-        tmp = Q6_Vw_vasl_VwVw(lane3, *shifts);
-        tmp1 = Q6_Vw_vlsr_VwVw(lane3, shifts_opp);
-        ctrl = Q6_Vb_vsplat_R(4);
-        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
-        lane3 = tmp ^ tmp1;
-        shifts++;
-        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
-        tmp = Q6_Vw_vasl_VwVw(lane3, *shifts);
-        tmp1 = Q6_Vw_vlsr_VwVw(lane3, shifts_opp);
-        ctrl = Q6_Vb_vsplat_R(4);
-        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
-        lane3 = tmp ^ tmp1;
-
-        shifts++;
-        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
-        tmp = Q6_Vw_vasl_VwVw(lane4, *shifts);
-        tmp1 = Q6_Vw_vlsr_VwVw(lane4, shifts_opp);
-        ctrl = Q6_Vb_vsplat_R(4);
-        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
-        lane4 = tmp ^ tmp1;
-
-        shifts++;
-        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
-        tmp = Q6_Vw_vasl_VwVw(lane4, *shifts);
-        tmp1 = Q6_Vw_vlsr_VwVw(lane4, shifts_opp);
-        ctrl = Q6_Vb_vsplat_R(4);
-        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
-        lane4 = tmp ^ tmp1;
-
-
+//        HVX_Vector C = lane0 ^ lane1 ^ lane2 ^ lane3 ^ lane4;
+//
+//        //Rotate C left by 1 (C[x+1])
+//        HVX_Vector D = Q6_V_vdelta_VV(C, shift);
+//
+//        //Rotate C right by 1 (C[x-1])
+//        C = Q6_V_vrdelta_VV(C, shift);
+//
+//        // rot(C[x+1] (=D for now), 1)
+//        HVX_Vector tmp = Q6_Vw_vasl_VwR(D, 1);
+//        HVX_Vector tmp1 = Q6_Vuw_vlsr_VuwR(D, 31);
+//        shift = Q6_V_vsplat_R(4);
+//        tmp1 = Q6_V_vdelta_VV(tmp1, shift);
+//        D = tmp ^ tmp1;
+//        D ^= C;
+//
+//        lane0 ^= D;
+//        lane1 ^= D;
+//        lane2 ^= D;
+//        lane3 ^= D;
+//        lane4 ^= D;
+//
+//        //rot by vector
+//
+//        HVX_Vector shifts_opp = Q6_V_vsplat_R(32) - *shifts;
+//        tmp = Q6_Vw_vasl_VwVw(lane0, *shifts);
+//        tmp1 = Q6_Vw_vlsr_VwVw(lane0, shifts_opp);
+//        ctrl = Q6_Vb_vsplat_R(4);
+//        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
+//        lane0 = tmp1 ^ tmp;
+//        shifts++;
+//        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
+//        tmp = Q6_Vw_vasl_VwVw(lane0, *shifts);
+//        tmp1 = Q6_Vw_vlsr_VwVw(lane0, shifts_opp);
+//        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
+//        lane0 = tmp ^ tmp1;
+//
+//        shifts++;
+//        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
+//        tmp = Q6_Vw_vasl_VwVw(lane1, *shifts);
+//        tmp1 = Q6_Vw_vlsr_VwVw(lane1, shifts_opp);
+//        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
+//        lane1 = tmp ^ tmp1;
+//        shifts++;
+//        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
+//        tmp = Q6_Vw_vasl_VwVw(lane1, *shifts);
+//        tmp1 = Q6_Vw_vlsr_VwVw(lane1, shifts_opp);
+//        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
+//        lane1 = tmp ^ tmp1;
+//
+//        shifts++;
+//        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
+//        tmp = Q6_Vw_vasl_VwVw(lane2, *shifts);
+//        tmp1 = Q6_Vw_vlsr_VwVw(lane2, shifts_opp);
+//        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
+//        lane2 = tmp ^ tmp1;
+//        shifts++;
+//        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
+//        tmp = Q6_Vw_vasl_VwVw(lane2, *shifts);
+//        tmp1 = Q6_Vw_vlsr_VwVw(lane2, shifts_opp);
+//        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
+//        lane2 = tmp ^ tmp1;
+//
+//        shifts++;
+//        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
+//        tmp = Q6_Vw_vasl_VwVw(lane3, *shifts);
+//        tmp1 = Q6_Vw_vlsr_VwVw(lane3, shifts_opp);
+//        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
+//        lane3 = tmp ^ tmp1;
+//        shifts++;
+//        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
+//        tmp = Q6_Vw_vasl_VwVw(lane3, *shifts);
+//        tmp1 = Q6_Vw_vlsr_VwVw(lane3, shifts_opp);
+//        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
+//        lane3 = tmp ^ tmp1;
+//
+//        shifts++;
+//        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
+//        tmp = Q6_Vw_vasl_VwVw(lane4, *shifts);
+//        tmp1 = Q6_Vw_vlsr_VwVw(lane4, shifts_opp);
+//        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
+//        lane4 = tmp ^ tmp1;
+//
+//        shifts++;
+//        shifts_opp = Q6_V_vsplat_R(32) - *shifts;
+//        tmp = Q6_Vw_vasl_VwVw(lane4, *shifts);
+//        tmp1 = Q6_Vw_vlsr_VwVw(lane4, shifts_opp);
+//        tmp1 = Q6_V_vdelta_VV(tmp1, ctrl);
+//        lane4 = tmp ^ tmp1;
 
         //Pi
-//        control_p = (HVX_Vector *)(pi_ctrl);
-//        ctrl = *control_p++;
-//        lane0 = Q6_V_vdelta_VV(lane0, ctrl);
-//        ctrl = *control_p--;
-//        lane0 = Q6_V_vdelta_VV(lane0, ctrl);
-//        ctrl = *control_p++;
-//        lane1 = Q6_V_vdelta_VV(lane1, ctrl);
-//        ctrl = *control_p--;
-//        lane1 = Q6_V_vdelta_VV(lane1, ctrl);
-//        ctrl = *control_p++;
-//        lane2 = Q6_V_vdelta_VV(lane2, ctrl);
-//        ctrl = *control_p--;
-//        lane2 = Q6_V_vdelta_VV(lane2, ctrl);
-//        ctrl = *control_p++;
-//        lane3 = Q6_V_vdelta_VV(lane3, ctrl);
-//        ctrl = *control_p--;
-//        lane3 = Q6_V_vdelta_VV(lane3, ctrl);
-//        ctrl = *control_p++;
-//        lane4 = Q6_V_vdelta_VV(lane4, ctrl);
-//        ctrl = *control_p--;
-//        lane4 = Q6_V_vdelta_VV(lane4, ctrl);
+
+        control_p = (HVX_Vector *)(pi_ctrl);
+        HVX_Vector pi_ctrl_vec1 = *control_p++;
+        HVX_Vector pi_ctrl_vec2 = *control_p;
+
+        lane0 = Q6_V_vrdelta_VV(lane0, pi_ctrl_vec1);
+        lane0 = Q6_V_vrdelta_VV(lane0, pi_ctrl_vec2);
+
+        lane1 = Q6_V_vrdelta_VV(lane1, pi_ctrl_vec1);
+        lane1 = Q6_V_vrdelta_VV(lane1, pi_ctrl_vec2);
+        lane1 = Q6_V_vdelta_VV(lane1, shift);
+        lane1 = Q6_V_vdelta_VV(lane1, shift);
+
+
+
+        lane2 = Q6_V_vrdelta_VV(lane2, pi_ctrl_vec1);
+        lane2 = Q6_V_vrdelta_VV(lane2, pi_ctrl_vec2);
+        lane2 = Q6_V_vrdelta_VV(lane2, shift);
+
+        lane3 = Q6_V_vrdelta_VV(lane3, pi_ctrl_vec1);
+        lane3 = Q6_V_vrdelta_VV(lane3, pi_ctrl_vec2);
+        lane3 = Q6_V_vdelta_VV(lane3, shift);
+
+        lane4 = Q6_V_vrdelta_VV(lane4, pi_ctrl_vec1);
+        lane4 = Q6_V_vrdelta_VV(lane4, pi_ctrl_vec2);
+        lane4 = Q6_V_vrdelta_VV(lane4, shift);
+        lane4 = Q6_V_vrdelta_VV(lane4, shift);
 //
 //        //Qui?
 //
