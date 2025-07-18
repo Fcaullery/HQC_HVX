@@ -5,24 +5,51 @@
 #include "polynomial_mul_i.h"
 #include "hexagon_types.h"
 #include "hvx.cfg.h"
+#include <stdio.h>
 
-void poly_mul_w(uint8_t *in, uint8_t *out, unsigned long *bits_set){
+void poly_mul_w(uint32_t *in, uint32_t *out, uint32_t *bits_set){
 
 
     HVX_Vector *pvector_in = (HVX_Vector *)in;
     HVX_Vector *pvector_out = (HVX_Vector *)out;
+    HVX_Vector tmp, tmp1, zero = Q6_V_vzero();
 
-    HVX_Vector vector_in = pvector_in[0];
-    vector_in = Q6_V_vror_VR(vector_in, 1);
-    vector_in = Q6_Vub_vlsr_VubR(vector_in, 2);
 
-    for(int i = 1; i < W; i++){
-        //rotate vector by offset i minus offset i-1
-        unsigned int m = bits_set[i];
+    uint32_t vector_offset = bits_set[0] / 1024; // gets the number of full vectors we need to rotate by
+    uint32_t word_offset = (bits_set[0] % 1024) / 32; // gets the number of word each vector has to be shifted by
+    uint32_t last_offset = bits_set[0] % 32; // gets the number of bits each vector has to be shifted by after word shift
+    HVX_VectorPred pred = Q6_Q_vsetq_R(word_offset * 4);
+    pred = ~pred;
 
+    for (uint32_t i = 0; i < N_HVX; i++){
+        pvector_out[(i + vector_offset) % N_HVX] = Q6_V_vror_VR(pvector_in[i], 128 - word_offset * 4);
     }
 
-    *pvector_out = vector_in;
+    for (uint32_t i = 0; i < N_HVX; i++){
+      HVX_Vector hi = Q6_Vw_vasl_VwR(pvector_out[i], last_offset);
+      pvector_out[i] = Q6_Vuw_vlsr_VuwR(pvector_out[i], 32 - last_offset);
+      pvector_out[i] = Q6_V_vror_VR(pvector_out[i], 124);
+      pvector_out[i] |= hi;
+    }
+
+    //TODO implement this with swapping should be more efficient
+    //Creating a mask
+    HVX_Vector mask = Q6_V_vsplat_R(0xFFFFFFFF);
+    mask = Q6_Vw_vinsert_VwR(mask, 0xFFFFFFFF >> (32 - last_offset));
+    mask = Q6_V_vror_VR(mask, 128 - word_offset * 4);
+    //FIXME
+    uint32_t word_offset_ceil = ((bits_set[0] % 1024) + 31) / 32;
+    pred = Q6_Q_vsetq_R(word_offset_ceil * 4);
+    mask = Q6_Vb_condacc_QVbVb(pred, zero, mask);
+
+
+    tmp = pvector_out[0] & mask;
+    pvector_out[0] = (pvector_out[0] & ~mask) | (pvector_out[N_HVX - 1] & mask);
+    pvector_out[N_HVX - 1] = (pvector_out[N_HVX - 1] & ~mask) ^ tmp;
+    for(uint32_t i = 1; i < N_HVX - 1; i++){
+        tmp = pvector_out[N_HVX - i] & mask;
+        pvector_out[N_HVX - i] = (pvector_out[N_HVX - i] & ~mask) | (pvector_out[N_HVX - i - 1] & mask);
+        pvector_out[N_HVX - i - 1] = (pvector_out[N_HVX - i - 1] & ~mask) ^ tmp;
+    }
 
 }
-
