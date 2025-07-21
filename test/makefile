@@ -50,6 +50,7 @@ endif
 #---------------------------------------------------------#
 ifeq ($(SRC),I)
   _C_SRCS = polynomial_mul_i.c \
+  			kyber_ntt_i.c \
   			$(PROGRAM)_i.c \
             test_$(PROGRAM).c
   _ASM_SRCS =
