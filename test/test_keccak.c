@@ -74,7 +74,9 @@ int main(int argc, char* argv[])
 	}
 	printf("AppReported (HVX%db-mode): - keccak: %llu cycles\n", VLEN, total_cycles);
     uint32_t test_weights[W] = {0};
-	test_weights[0] = 33;
+    for (i = 0; i < W; i++) {
+    	test_weights[i] = (17 + 1023 * i) % N;
+    }
 	uint32_t poly_in[N_HVX * 32] __attribute__((aligned(128))) = {0};
 	uint32_t poly_out[N_HVX * 32] __attribute__((aligned(128)))= {0};
 
