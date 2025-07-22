@@ -64,8 +64,12 @@ void ntt_c(int16_t r[256]) {
     putchar(10);
     for(start = 0; start < 256; start = j + len) {
       zeta = zetas[k++];
-      printf("len %d, k %d zeta %d\n", len, k, zeta);
+//      printf("\n");
       for(j = start; j < start + len; j++) {
+//        if((j - start) < len / 2)
+//            printf("%d, %d, ", zeta, zeta);
+//        else
+//            printf("%d, %d, ", -zeta, -zeta);
         t = fqmul(zeta, r[j + len]);
         r[j + len] = r[j] - t;
         r[j] = r[j] + t;
@@ -170,7 +174,7 @@ int main(int argc, char* argv[])
       printf("%d ", ntt_test_tv[i]);
       if(i % 64 == 63) printf("\n\n");
     }
-//    ntt_c(ntt_test);
+    ntt_c(ntt_test);
 
     RESET_PMU();
 
@@ -180,11 +184,15 @@ int main(int argc, char* argv[])
 
     DUMP_PMU();
 
-    for (i = 0; i < 64; i++) {
-      printf("%d ", ntt_test[i]);
-      if(i % 64 == 63) printf("\n\n");
+    for (i = 0; i < 128; i++) {
+      printf("%04d ", ntt_test[i]);
+      if(i % 32 == 31) printf("\n");
+      if(i % 64 == 63) printf("\n");
     }
     printf("AppReported (HVX%db-mode): - NTT: %llu cycles\n", VLEN, total_cycles);
+
+
+
 
     return 0;
 }
